@@ -6,7 +6,7 @@ int main(){
     std::string s = "lol";
 
     for(int i = 0; i < 10; i++){
-        std::cout << h.hash(s.c_str(),3,i) << std::endl;
+        std::cout << h.hash(s,i) << std::endl;
     }
     return 0;
 }

@@ -2,15 +2,15 @@
 #define TAREA3_HASHES_HPP
 
 #include <cstdint>
-#include <cstring>
 #include <vector>
+#include <iostream>
 
 class Hashes {
 private:
     std::vector<uint32_t> seeds;
 public:
     Hashes(int k);
-    int hash(const char *key, uint32_t len, int iterator);
+    unsigned int hash(std::string input, int iterator);
 };
 
 

@@ -1,5 +1,6 @@
 #include <Tarea/hashes.hpp>
 #include <limits>
+#include <cstring>
 #include <random>
 
 Hashes::Hashes(int k){
@@ -17,7 +18,9 @@ Hashes::Hashes(int k){
     }
 }
 
-int Hashes::hash(const char *key, uint32_t len, int iterator) {
+unsigned int Hashes::hash(std::string input, int iterator){
+    const char *key = input.c_str();
+    uint32_t len = input.size();
     uint32_t c1 = 0xcc9e2d51;
     uint32_t c2 = 0x1b873593;
     uint32_t r1 = 15;
@@ -64,5 +67,5 @@ int Hashes::hash(const char *key, uint32_t len, int iterator) {
     hash *= 0xc2b2ae35;
     hash ^= (hash >> 16);
 
-    return abs(hash);
+    return hash;
 }
