@@ -12,13 +12,13 @@
 
 class BloomFilter {
 private:
-    std::vector<bool> M;//vector para los bits
     Hashes h;
 
 public:
+    std::vector<bool> M;//vector para los bits
     BloomFilter(int l, int k):M(l,false),h(k){} //inicializacion
-    bool search(std::string name, int k); //metodo para buscar
-    void add(std::string name, int k); //metodo para añadir ocupando k funciones de hash
-    bool sequentialSearch(std::string name); //metodo para busqueda secuencial
+    bool search(std::string name); //metodo para buscar
+    void add(std::string name); //metodo para añadir ocupando k funciones de hash
+    bool sequentialSearch(std::string name, std::vector<std::string> domain); //metodo para busqueda secuencial
 };
 #endif //BLOOM_FILTER_H

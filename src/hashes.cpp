@@ -16,6 +16,7 @@ Hashes::Hashes(int k){
         uint32_t seed = (uint32_t) distrib(gen);
         seeds.push_back(seed);
     }
+    _k = k;
 }
 
 unsigned int Hashes::hash(std::string input, int iterator){
@@ -68,4 +69,8 @@ unsigned int Hashes::hash(std::string input, int iterator){
     hash ^= (hash >> 16);
 
     return hash;
+}
+
+int Hashes::k() {
+    return _k;
 }

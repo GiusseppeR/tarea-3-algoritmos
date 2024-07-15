@@ -8,8 +8,10 @@
 class Hashes {
 private:
     std::vector<uint32_t> seeds;
+    int _k;
 public:
     Hashes(int k);
+    int k();
     unsigned int hash(std::string input, int iterator);
 };
 
