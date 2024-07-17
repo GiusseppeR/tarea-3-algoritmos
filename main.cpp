@@ -5,40 +5,32 @@
 #include <Tarea/bloomFilter.hpp>
 #include <algorithm>
 
+#include "Tarea/JSONConverter.hpp"
+
 int main() {
     CSVParser P;
+    JSONConverter reportGenerator;
     std::vector<std::string> films = P.parse("../Film-Names.csv");
     std::vector<std::string> babies = P.parse("../Popular-Baby-Names-Final.csv");
 
-    std::vector<int> N = {1 << 10, 1<<12, 1<<14, 1<<16};
-    std::vector<double> p = {0,0.25,0.5, 0.75, 1};
-    std::vector<int> hashes = {1,5,10};
-    std::vector<int> M = {1<<14,1<<17,1<<20,1<<24};
+    std::vector<int> N = {1 << 10, 1 << 12, 1 << 14, 1 << 16};
+    std::vector<double> p = {0, 0.25, 0.5, 0.75, 1};
+    std::vector<int> hashes = {1, 5, 10};
+    std::vector<int> M = {1 << 14, 1 << 17, 1 << 20, 1 << 24};
 
-    std::vector<std::vector<std::vector<std::vector<double>>>> errors(M.size());
-    std::vector<std::vector<std::vector<std::vector<double>>>> filterTimes(M.size());
-    std::vector<std::vector<std::vector<std::vector<double>>>> sequentialTimes(M.size());
-
-    for(int i = 0; i < M.size(); i++) {
-        errors[i].reserve(hashes.size());
-        filterTimes[i].reserve(hashes.size());
-        sequentialTimes[i].reserve(hashes.size());
-
-        for(int j = 0; j < hashes.size(); j++) {
-            errors[i][j].reserve(N.size());
-            filterTimes[i][j].reserve(N.size());
-            sequentialTimes[i][j].reserve(N.size());
-
-            for(int k = 0; k < hashes.size(); k++) {
-                errors[i][j][k].reserve(p.size());
-                filterTimes[i][j][k].reserve(p.size());
-                sequentialTimes[i][j][k].reserve(p.size());
-            }
-        }
-    }
+    std::vector<std::vector<std::vector<std::vector<double>>>> errors;
+    std::vector<std::vector<std::vector<std::vector<double>>>> filterTimes;
+    std::vector<std::vector<std::vector<std::vector<double>>>> sequentialTimes;
 
     for(int m = 0; m < M.size(); m++) {
+        std::vector<std::vector<std::vector<double>>> counters_m;
+        std::vector<std::vector<std::vector<double>>> bloomTimes_m;
+        std::vector<std::vector<std::vector<double>>> seqTimes_m;
         for(int k = 0; k < hashes.size(); k++){
+            std::vector<std::vector<double>> counters_k;
+            std::vector<std::vector<double>> bloomTimes_k;
+            std::vector<std::vector<double>> seqTimes_k;
+
             std::vector<std::vector<std::string>> inputs(20, std::vector<std::string>());
 
             std::random_device rd;
@@ -75,7 +67,6 @@ int main() {
                     std::shuffle(input->begin(), input->end(), gen);
                 }
             }
-
             std::vector<double> counters(p.size(),0);
             std::vector<double> bloomTimes(p.size(),0);
             std::vector<double> seqTimes(p.size(),0);
@@ -87,6 +78,12 @@ int main() {
 
                         auto start = std::chrono::high_resolution_clock::now();
                         bool result1 = filter.search(name);
+
+                        if (result1) {
+                            bool result2 = filter.sequentialSearch(name,babies);
+                            if (result1 != result2)
+                                counters[z] += 1;
+                        }
                         auto end = std::chrono::high_resolution_clock::now();
 
                         std::chrono::duration<double> elapsed_seconds = end - start;
@@ -94,15 +91,12 @@ int main() {
                         bloomTimes[z] += time;
 
                         start = std::chrono::high_resolution_clock::now();
-                        bool result2 = filter.sequentialSearch(name,babies);
+                        filter.sequentialSearch(name,babies);
                         end = std::chrono::high_resolution_clock::now();
 
                         elapsed_seconds = end - start;
                         time = elapsed_seconds.count();
                         seqTimes[z] += time;
-
-                        if (result1 == true && result2 == false)
-                            counters[z] += 1.0;
 
                     }
                     counters[z] /= N[i];
@@ -113,12 +107,19 @@ int main() {
                     std::cout << "Seq time: " << seqTimes[z] << std::endl;
                     std::cout << "##################################################################\n";
                 }
-                errors[m][k][i] = counters;
-                filterTimes[m][k][i] = bloomTimes;
-                sequentialTimes[m][k][i] = seqTimes;
+                counters_k.push_back(counters);
+                bloomTimes_k.push_back(bloomTimes);
+                seqTimes_k.push_back(seqTimes);
             }
+            counters_m.push_back(counters_k);
+            bloomTimes_m.push_back(bloomTimes_k);
+            seqTimes_m.push_back(seqTimes_k);
         }
+        errors.push_back(counters_m);
+        filterTimes.push_back(bloomTimes_m);
+        sequentialTimes.push_back(seqTimes_m);
     }
+    JSONConverter::writeReport(M,N,hashes,p,errors,filterTimes,sequentialTimes);
 
     return 0;
 }
